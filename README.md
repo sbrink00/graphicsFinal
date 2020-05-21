@@ -1,2 +1,2 @@
 # graphicsFinal
-repo for final project for graphics
+## repo for final project for graphics
