@@ -5,7 +5,7 @@ repo for final project for graphics
 Sam Brink
 
 ## Features to Add
--A way to add text to images
+-A way to add text to images\n
 -set
 -save coordinate system
 -commands to add more features to the mdl files so you don't have to go into python files to change things:
