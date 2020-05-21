@@ -4,7 +4,8 @@ repo for final project for graphics
 ## Members
 Sam Brink
 
-## Features to Add
+Features to Add
+
 A way to add text to images
 set
 save coordinate system
