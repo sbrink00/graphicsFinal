@@ -1,9 +1,9 @@
 import subprocess
 
-font = "timesnewroman/"
+font = "pinyon/"
 
 def genLines(file):
-  with open(file, "r") as f:
+  with open(font + file, "r") as f:
     lines = f.readlines()
   return lines
 
@@ -17,7 +17,6 @@ def readPPM(file):
   for i in range(height):
     temp = []
     for x in range(0, width * 3, 3):
-      #print(len(lines[i]))
       color = []
       color.append(int(lines[i][x]))
       color.append(int(lines[i][x + 1]))
@@ -28,17 +27,18 @@ def readPPM(file):
 
 def writePPM(lines, output):
   width = len(lines[0])
-  for i in range(len(lines)):
-    line = lines[i]
+  content = lines
+  for i in range(len(content)):
+    line = content[i]
     for x in range(len(line)):
       line[x] = " ".join([str(y) for y in line[x]])
     line = " ".join(line).strip() + "\n"
-    lines[i] = line
-  lines.insert(0, "P3\n")
-  lines.insert(1, str(width) + " " + str(len(lines) - 1) + "\n")
-  lines.insert(2, "255\n")
-  with open(font + output + ".ppm", "w") as f:
-    f.writelines(lines)
+    content[i] = line
+  content.insert(0, "P3\n")
+  content.insert(1, str(width) + " " + str(len(lines) - 1) + "\n")
+  content.insert(2, "255\n")
+  with open(font + output, "w") as f:
+    f.writelines(content)
 
 def divide(file):
   lines = readPPM(file)
@@ -61,7 +61,7 @@ def divide(file):
   return lines,boundaries
 
 def makeLetters(file):
-  lines,boundaries = divide(font + file)
+  lines,boundaries = divide(file)
   alphabet = "abcdefghijklmnopqrstuvwxyz"
   dict = {}
   for i,x in enumerate(alphabet):
@@ -73,21 +73,25 @@ def makeLetters(file):
     dict[letter] = lines[s:e]
   sum = 0
   for letter in dict:
-    writePPM(dict[letter], letter)
+    #removeshading(letter + ".ppm")
+    writePPM(dict[letter], letter + ".ppm")
+    removeshading(letter + ".ppm")
     genLetterLines(letter)
 
 def removeshading(file):
   black = [0] * 3
   white = [255] * 3
-  lines = readPPM(font + file)
+  lines = readPPM(file)
   for i in range(len(lines)):
     for x in range(len(lines[i])):
-      if not whitepixel(lines[i][x]): lines[i][x] = black
-  writePPM(lines, "a")
+      if not whitepixel(lines[i][x]):
+        #print("reached")
+        lines[i][x] = black
+  writePPM(lines, file)
 
 def genLetterLines(letter):
   output = []
-  lines = readPPM(font + letter + ".ppm")
+  lines = readPPM(letter + ".ppm")
   for y in range(len(lines)):
     ml = False
     s = None
@@ -102,7 +106,6 @@ def genLetterLines(letter):
     output[i] = " ".join([str(p) for p in output[i]]) + "\n"
   with open(font + letter + ".letter", "w") as f: f.writelines(output)
 
-    #with open(letter + ".ppm")
 def genLetterEdges(letter, z):
   edges = []
   genLetterLines(letter)
@@ -121,7 +124,9 @@ def whiteline(line):
   return True
 
 def whitepixel(pixel):
-  return pixel[0] == pixel[1] == pixel[2] == 255
+  return sum(pixel) > 720
 
 def blackpixel(pixel):
-  return pixel[0] == pixel[1] == pixel[2] == 0
+  return not whitepixel(pixel)
+
+makeLetters("pinyon.ppm")

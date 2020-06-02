@@ -3,9 +3,32 @@ from matrix import *
 from gmath import *
 from processFont import *
 
-def addletter(letter, screen, zbuffer, color):
-  edges = genLetterEdges(letter, 0)
-  draw_lines(edges, screen, zbuffer, [0, 0, 0])
+def makeLetter(x, y, z, letter):
+  if letter == " ": return []
+  edges = genLetterEdges(letter, z)
+  matrix_mult(make_translate(x, y, z), edges)
+  if letter == "q":
+    matrix_mult(make_scale(.9, .9, .9), edges)
+    matrix_mult(make_translate(40, 0, 0), edges)
+  return edges
+
+def addLetter(x, y, z, letter, edges):
+  edges.extend(makeLetter(x, y, z, letter))
+
+def createWord(x, y, z, word, edges):
+  space = 0
+  ary = list(word)
+  for i in range(len(ary)):
+    addLetter(x + space, y, z, ary[i], edges)
+    space += 40
+    if ary[i] == "w": space += 8
+    elif ary[i] == "m": space += 8
+    elif ary[i] == "l": space -= 3
+    elif ary[i] == "i": space -= 10
+    elif ary[i] == "j": space -= 10
+    elif ary[i] == "f": space -= 5
+    elif ary[i] == "s": space -= 5
+    elif ary[i] == "q": space -= 8
 
 def draw_scanline(x0, z0, x1, z1, y, screen, zbuffer, color):
     if x0 > x1:
