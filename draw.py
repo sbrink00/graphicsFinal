@@ -2,33 +2,66 @@ from display import *
 from matrix import *
 from gmath import *
 from processFont import *
+import processFont
+from math import log
 
-def makeLetter(x, y, z, letter):
-  if letter == " ": return []
+def makeLetter(x, y, z, letter, size):
+  if letter == " " or letter == "\n": return []
   edges = genLetterEdges(letter, z)
+  if size == 3:
+    idx = 0
+    while idx < len(edges):
+      if edges[idx][1] % 2 == 1:
+        del edges[idx]
+        idx -= 1
+      idx += 1
+    matrix_mult(make_scale(.5, .5, .5), edges)
+  if size == 3:
+    idx = 0
+    while idx < len(edges):
+      if edges[idx][1] % 2 == 1:
+        del edges[idx]
+        idx -= 1
+      idx += 1
+    matrix_mult(make_scale(.5, .5, .5), edges)
   matrix_mult(make_translate(x, y, z), edges)
-  if letter == "q":
-    matrix_mult(make_scale(.9, .9, .9), edges)
-    matrix_mult(make_translate(40, 0, 0), edges)
   return edges
 
-def addLetter(x, y, z, letter, edges):
-  edges.extend(makeLetter(x, y, z, letter))
+def makeLetter3d(x, y, z, letter):
+  if letter == " " or letter == "\n": return []
+  edges = genLetterEdges(letter, z)
+  matrix_mult(make_translate(x, y, z), edges)
+  polygons = []
+  for edge in range(0, len(edges), 2):
+    e1,e2 = edges[edge],edges[edge + 1]
+    add_box(polygons, e1[0], e1[1], e1[2], e2[1] - e1[1], 1, 10)
+  return polygons
 
-def createWord(x, y, z, word, edges):
-  space = 0
+def addLetter(x, y, z, letter, edges, size):
+  edges.extend(makeLetter(x, y, z, letter, size))
+
+def addLetter3d(x, y, z, letter, polygons):
+  polygons.extend(makeLetter3d(x, y, z, letter))
+
+def createWord(x, y, z, word, edges, Font, size=12):
+  if size not in [3, 6, 12]: raise Exception("font must be 3, 6, 12, or 24")
+  processFont.font = Font
+  space = [0, 0]
   ary = list(word)
   for i in range(len(ary)):
-    addLetter(x + space, y, z, ary[i], edges)
-    space += 40
-    if ary[i] == "w": space += 8
-    elif ary[i] == "m": space += 8
-    elif ary[i] == "l": space -= 3
-    elif ary[i] == "i": space -= 10
-    elif ary[i] == "j": space -= 10
-    elif ary[i] == "f": space -= 5
-    elif ary[i] == "s": space -= 5
-    elif ary[i] == "q": space -= 8
+    addLetter(x + space[0], y + space[1], z, ary[i], edges, size)
+    space[0] += int(35 * (size / 12))
+    if ary[i] == "w": space[0] += 8
+    elif ary[i] == "m": space[0] += 8
+    elif ary[i] == "l": space[0] -= 3
+    elif ary[i] == "i": space[0] -= 10
+    elif ary[i] == "j": space[0] -= 10
+    elif ary[i] == "f": space[0] -= 5
+    elif ary[i] == "s": space[0] -= 5
+    elif ary[i] == "q": space[0] -= 8
+    elif ary[i] == "\n":
+      space[0] = 0
+      space[1] -= 50
 
 def draw_scanline(x0, z0, x1, z1, y, screen, zbuffer, color):
     if x0 > x1:
