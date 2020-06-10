@@ -127,9 +127,7 @@ def run(filename, delay=5):
     threeDStuffs = ["box", "sphere", "torus"]
     images = []
     start = time.time()
-    print(commands)
     for x in range(num_frames):
-      print(x)
       print("Now making frame " + str(x), end='\r')
       sys.stdout.flush()
       screen = new_screen()
@@ -150,7 +148,14 @@ def run(filename, delay=5):
             if command["cs"] != None: pass
           if c == "word":
             words[args[0]] = args[1].replace("S", " ").replace( "N", "\n")
-            print(words)
+          if c == "write":
+            w,xcor,ycor,zcor,size = words[args[0]],int(args[1]),int(args[2]),int(args[3]),int(args[4])
+            print(w)
+            createWord(0, 0, 0, w, edges, DEFAULT_FONT, size)
+            matrix_mult(stack[-1], edges)
+            matrix_mult(make_translate(xcor + 500, ycor, zcor), edges)
+            draw_lines(edges, screen, zbuffer, color)
+            edges.clear()
           if c == "save":
             save_extension(screen, args[0] + ".png")
             print("Filename: " + args[0] + ".png")
@@ -218,7 +223,8 @@ def run(filename, delay=5):
           if c == "light": pass
           if c == "mesh": pass
           if c == "basename": pass
-      fname = "anim/" + basename + str(x) + ".png"
+      fname = basename + str(x) + ".png"
+      if num_frames > 1: fname = "anim/" + fname
       images.append(fname)
       #I have not fully implemented the add text image feature
       #so the line below is specific to the gif I am submitting
