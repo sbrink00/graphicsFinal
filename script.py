@@ -79,7 +79,7 @@ def second_pass( commands, num_frames ):
 
     return frames
 
-def run(filename, delay=5):
+def run(filename, delay=10):
     """
     This function runs an mdl script
     """
@@ -150,11 +150,15 @@ def run(filename, delay=5):
             words[args[0]] = args[1].replace("S", " ").replace( "N", "\n")
           if c == "write":
             w,xcor,ycor,zcor,size = words[args[0]],int(args[1]),int(args[2]),int(args[3]),int(args[4])
-            print(w)
-            createWord(0, 0, 0, w, edges, DEFAULT_FONT, size)
+            createWord(xcor, ycor, zcor, w, edges, DEFAULT_FONT, size)
             matrix_mult(stack[-1], edges)
-            matrix_mult(make_translate(xcor + 500, ycor, zcor), edges)
-            draw_lines(edges, screen, zbuffer, color)
+            draw_lines(edges, screen, zbuffer, [100, 100, 255])
+            edges.clear()
+          if c == "writecentered":
+            w,size = words[args[0]],int(args[1])
+            createWordCentered(w, edges, DEFAULT_FONT, size)
+            matrix_mult(stack[-1], edges)
+            draw_lines(edges, screen, zbuffer, [100, 100, 255])
             edges.clear()
           if c == "save":
             save_extension(screen, args[0] + ".png")

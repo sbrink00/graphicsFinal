@@ -8,15 +8,7 @@ from math import log
 def makeLetter(x, y, z, letter, size):
   if letter == " " or letter == "\n": return []
   edges = genLetterEdges(letter, z)
-  if size == 3:
-    idx = 0
-    while idx < len(edges):
-      if edges[idx][1] % 2 == 1:
-        del edges[idx]
-        idx -= 1
-      idx += 1
-    matrix_mult(make_scale(.5, .5, .5), edges)
-  if size == 3:
+  if size == 6:
     idx = 0
     while idx < len(edges):
       if edges[idx][1] % 2 == 1:
@@ -62,6 +54,21 @@ def createWord(x, y, z, word, edges, Font, size=12):
     elif ary[i] == "\n":
       space[0] = 0
       space[1] -= 50
+
+def createWordCentered(word, edges, Font, size=12):
+  createWord(0, 0, 0, word, edges, Font, size)
+  minX = edges[0][0]
+  minY = edges[0][1]
+  maxX = edges[0][0]
+  maxY = edges[0][1]
+  for edge in edges:
+    if edge[0] < minX: minX = edge[0]
+    elif edge[0] > maxX: maxX = edge[0]
+    if edge[1] < minY: minY = edge[1]
+    elif edge[1] > maxY: maxY = edge[1]
+  midX = minX + (maxX - minX) // 2
+  midY = minY + (maxY - minY) // 2
+  matrix_mult(make_translate(-1 * midX, -1 * midY, 0), edges)
 
 def draw_scanline(x0, z0, x1, z1, y, screen, zbuffer, color):
     if x0 > x1:

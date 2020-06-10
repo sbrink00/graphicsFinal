@@ -40,7 +40,8 @@ tokens = (
     "WEB",
     "CO",
     "WORD",
-    "WRITE"
+    "WRITE",
+    "WRITECENTERED"
 )
 
 reserved = {
@@ -83,7 +84,8 @@ reserved = {
     "display" : "DISPLAY",
     "web" : "WEB",
     "word": "WORD",
-    "write": "WRITE"
+    "write": "WRITE",
+    "writecentered": "WRITECENTERED"
 }
 
 t_ignore = " \t"
@@ -151,6 +153,10 @@ def p_command_word(p):
 
 def p_command_write(p):
     """command : WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER"""
+    commands.append({'op': p[1], 'args': p[2:]})
+
+def p_command_writecentered(p):
+    """command : WRITECENTERED SYMBOL NUMBER"""
     commands.append({'op': p[1], 'args': p[2:]})
 
 def p_command_stack(p):
