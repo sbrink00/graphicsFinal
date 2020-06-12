@@ -2,22 +2,25 @@ from subprocess import Popen, PIPE
 from os import remove
 
 #constants
-XRES = 1000
-YRES = 1000
+XRES = 500
+YRES = 500
 MAX_COLOR = 255
 RED = 0
 GREEN = 1
 BLUE = 2
 
-DEFAULT_COLOR = [255, 255, 255]
+white = [255, 255, 255]
+black = [0, 0, 0]
 
-def new_screen( width = XRES, height = YRES ):
+DEFAULT_COLOR = black
+
+def new_screen(color, width = XRES, height = YRES):
     screen = []
     for y in range( height ):
         row = []
         screen.append( row )
         for x in range( width ):
-            screen[y].append( DEFAULT_COLOR[:] )
+            screen[y].append( color[:] )
     return screen
 
 def new_zbuffer( width = XRES, height = YRES ):

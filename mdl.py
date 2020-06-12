@@ -41,7 +41,11 @@ tokens = (
     "CO",
     "WORD",
     "WRITE",
-    "WRITECENTERED"
+    "WRITECENTERED",
+    "DELAY",
+    "DCOLOR",
+    "COLOR",
+    "DCOLOR_GRADIENT"
 )
 
 reserved = {
@@ -85,7 +89,11 @@ reserved = {
     "web" : "WEB",
     "word": "WORD",
     "write": "WRITE",
-    "writecentered": "WRITECENTERED"
+    "writecentered": "WRITECENTERED",
+    "delay": "DELAY",
+    "dcolor": "DCOLOR",
+    "color": "COLOR",
+    "dcolor_gradient": "DCOLOR_GRADIENT"
 }
 
 t_ignore = " \t"
@@ -152,11 +160,32 @@ def p_command_word(p):
     commands.append({'op': p[1], 'args': p[2:]})
 
 def p_command_write(p):
-    """command : WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER"""
-    commands.append({'op': p[1], 'args': p[2:]})
+    """command : WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER
+               | WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER SYMBOL"""
+    cmd = {'op': p[1], 'args': p[2:7]}
+    if len(p) == 8: cmd["font"] = p[7] + "/"
+    commands.append(cmd)
 
 def p_command_writecentered(p):
     """command : WRITECENTERED SYMBOL NUMBER"""
+    cmd = {'op': p[1], 'args': p[2:4]}
+    if len(p) == 5: cmd["font"] = p[4] + "/"
+    commands.append(cmd)
+
+def p_command_delay(p):
+    """command : DELAY NUMBER"""
+    commands.append({'op': p[1], 'args': p[2:]})
+
+def p_command_dcolor(p):
+    """command : DCOLOR SYMBOL"""
+    commands.append({'op': p[1], 'args': p[2:]})
+
+def p_command_color(p):
+    """command : COLOR SYMBOL NUMBER NUMBER NUMBER"""
+    symbols[p[2]] = [int(p[3]), int(p[4]), int(p[5])]
+
+def p_command_dcolor_gradient(p):
+    """command : DCOLOR_GRADIENT SYMBOL SYMBOL NUMBER NUMBER"""
     commands.append({'op': p[1], 'args': p[2:]})
 
 def p_command_stack(p):

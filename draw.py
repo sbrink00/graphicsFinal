@@ -43,7 +43,7 @@ def createWord(x, y, z, word, edges, Font, size=12):
   for i in range(len(ary)):
     addLetter(x + space[0], y + space[1], z, ary[i], edges, size)
     space[0] += int(35 * (size / 12))
-    if ary[i] == "w": space[0] += 8
+    if ary[i] == "w": space[0] += 6
     elif ary[i] == "m": space[0] += 8
     elif ary[i] == "l": space[0] -= 3
     elif ary[i] == "i": space[0] -= 10

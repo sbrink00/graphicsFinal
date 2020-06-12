@@ -3,10 +3,13 @@ from addImage import addTextImage
 import sys
 import mdl
 from display import *
+import display
 from matrix import *
 from draw import *
 import subprocess
 import time
+from pprint import pprint
+import math
 
 def dc(ary):
   return [x if type(x) is not list else dc(x) for x in ary]
@@ -23,13 +26,13 @@ def dc(ary):
   with the name being used.
   ==================== """
 def first_pass( commands ):
-    animCommands = ["vary", "frames", "basename"]
+    animCommands = ["vary", "frames", "basename", "dcolor_gradient"]
     animCommands  = [x for x in commands if x["op"] in animCommands]
     if len(animCommands) == 0: return "pic",1,None
     animKeywords = [x["op"] for x in animCommands]
-    if ("vary" in animKeywords or "basename" in animKeywords) and "frames" not in animKeywords:
+    if ("vary" in animKeywords or "basename" in animKeywords or "dcolor_gradient" in animKeywords) and "frames" not in animKeywords:
       raise Exception("Animation commands present but number of frames not defined.")
-    if ("vary" in animKeywords or "frames" in animKeywords) and "basename" not in animKeywords:
+    if ("vary" in animKeywords or "frames" in animKeywords or "dcolor_gradient" in animKeywords) and "basename" not in animKeywords:
       print("No basename was given so basename set to default: 'pic'.")
       basename = "pic"
     if "basename" in animKeywords:
@@ -53,19 +56,20 @@ def first_pass( commands ):
   dictionary corresponding to the given knob with the
   appropirate value.
   ===================="""
-def second_pass( commands, num_frames ):
+def second_pass( commands, num_frames, symbols ):
     varies = [x for x in commands if x["op"] == "vary"]
     frames = [{} for i in range(num_frames)]
     knobs = []
     for command in varies:
       knob_name = command["knob"]
+      if knob_name == "dcolor": raise Exception("not a valid name for a knob")
       knobs.append(knob_name)
       start_frame = int(command["args"][0])
       end_frame = int(command["args"][1])
       if end_frame < start_frame:
         raise Exception("End frame is less than start frame")
-      start_value = int(command["args"][2])
-      end_value = int(command["args"][3])
+      start_value = float(command["args"][2])
+      end_value = float(command["args"][3])
       for i in range(start_frame, end_frame + 1):
         percent = 1.0 * (i - start_frame) / (end_frame - start_frame)
         val = percent * (end_value - start_value) + start_value
@@ -74,12 +78,62 @@ def second_pass( commands, num_frames ):
       for knob in knobs:
         if knob not in frame:
           raise Exception("Knob "  + knob + " is not defined for all frames.")
+    #SAME IDEA EXCEPT FOR THE DEFAULT COLOR
+    dcolors = [x for x in commands if x["op"] == "dcolor_gradient"]
+    for command in dcolors:
+      args = command["args"]
+      c0 = symbols[args[0]]
+      c1 = symbols[args[1]]
+      start_frame = int(command["args"][2])
+      end_frame = int(command["args"][3])
+      if end_frame < start_frame:
+        raise Exception("End frame is less than start frame")
+      for i in range(start_frame, end_frame + 1):
+        percent = 1.0 * (i - start_frame) / (end_frame - start_frame)
+        color = []
+        for a,b in zip(c0, c1):
+          temp = percent * abs(a - b)
+          val = a + temp if a < b else a - temp
+          color.append(round(val))
+        frames[i]["dcolor"] = color
+    if not dcolors:
+      temp = None
+      for i in commands:
+        if i["op"] == "dcolor": temp = symbols[i["args"][0]]
+      temp = [0, 0, 0] if temp != None else temp
+      for i in range(len(frames)): frames[i]["dcolor"] = temp
+    for frame in frames:
+      if "dcolor" not in frame:
+        raise Exception("default color not defined for all frames.")
     return frames
 
+def removeAnim(commands):
+  idx = 0
+  while idx < len(commands):
+    c = commands[idx]["op"]
+    args = commands[idx]["args"]
+    if c in ["basename", "frames", "vary", "delay"]:
+      del commands[idx]
+      idx -= 1
+    idx += 1
 
-    return frames
+def oneTimeCommands(commands, symbols, dcolor):
+  idx = 0
+  while idx < len(commands):
+    c = commands[idx]["op"]
+    args = commands[idx]["args"]
+    if c == "dcolor":
+      co = symbols[args[0]]
+      dcolor[0],dcolor[1],dcolor[2] = co[0],co[1],co[2]
+      del commands[idx]
+      idx -= 1
+    elif c in ["color", "constants"]:
+      del commands[idx]
+      idx -= 1
+    idx += 1
 
-def run(filename, delay=10):
+
+def run(filename):
     """
     This function runs an mdl script
     """
@@ -90,7 +144,11 @@ def run(filename, delay=10):
     else:
         raise Exception("Unable to parse file.")
     basename, num_frames, animCommands = first_pass(commands)
-    if animCommands: knobValues = second_pass(animCommands, num_frames)
+    if animCommands: knobValues = second_pass(animCommands, num_frames, symbols)
+    dcolor = [0, 0, 0]
+    DEFAULT_FONT = "lobster/"
+    oneTimeCommands(commands, symbols, dcolor)
+    removeAnim(commands)
     view = [0,
             0,
             1];
@@ -103,18 +161,17 @@ def run(filename, delay=10):
              [255,
               255,
               255]]
-
-    color = [0, 0, 0]
     tmp = new_matrix()
     ident( tmp )
     stack = [ [x[:] for x in tmp] ]
     #for when there are multiple coordinate systems
     stacks = []
     stacks.append(stack)
-    screen = new_screen()
+    screen = new_screen(dcolor)
     zbuffer = new_zbuffer()
     #tmp = []
     step_3d = 10
+    delay = 3
     consts = ''
     edges = []
     polygons = []
@@ -130,7 +187,7 @@ def run(filename, delay=10):
     for x in range(num_frames):
       print("Now making frame " + str(x), end='\r')
       sys.stdout.flush()
-      screen = new_screen()
+      screen = new_screen(knobValues[x]["dcolor"])
       zbuffer = new_zbuffer()
       stack = [dc(tmp)]
       for i,command in enumerate(commands):
@@ -148,23 +205,25 @@ def run(filename, delay=10):
             if command["cs"] != None: pass
           if c == "word":
             words[args[0]] = args[1].replace("S", " ").replace( "N", "\n")
-          if c == "write":
+          elif c == "write":
             w,xcor,ycor,zcor,size = words[args[0]],int(args[1]),int(args[2]),int(args[3]),int(args[4])
             createWord(xcor, ycor, zcor, w, edges, DEFAULT_FONT, size)
             matrix_mult(stack[-1], edges)
             draw_lines(edges, screen, zbuffer, [100, 100, 255])
             edges.clear()
-          if c == "writecentered":
+          elif c == "writecentered":
             w,size = words[args[0]],int(args[1])
             createWordCentered(w, edges, DEFAULT_FONT, size)
             matrix_mult(stack[-1], edges)
             draw_lines(edges, screen, zbuffer, [100, 100, 255])
             edges.clear()
-          if c == "save":
+          elif c == "save":
             save_extension(screen, args[0] + ".png")
             print("Filename: " + args[0] + ".png")
             screen.clear()
-          if c == "line":
+          elif c ==  "delay":
+            delay = int(args[0])
+          elif c == "line":
             if command["cs0"] != None: pass
             if command["cs1"] != None: pass
             add_edge( edges,
@@ -173,22 +232,22 @@ def run(filename, delay=10):
             matrix_mult(stack[-1], edges)
             draw_lines(edges, screen, zbuffer, color)
             edges = []
-          if c == "curve": pass
-          if c == "sphere":
+          elif c == "curve": pass
+          elif c == "sphere":
             add_sphere(polygons,
                        float(args[0]), float(args[1]), float(args[2]),
                        float(args[3]), step_3d)
             matrix_mult(stack[-1], polygons)
             draw_polygons(polygons, screen, zbuffer, view, ambient, light, symbols, reflect)
             polygons = []
-          if c == "box":
+          elif c == "box":
             add_box(polygons,
                        float(args[0]), float(args[1]), float(args[2]),
                        float(args[3]), float(args[4]), float(args[5]))
             matrix_mult(stack[-1], polygons)
             draw_polygons(polygons, screen, zbuffer, view, ambient, light, symbols, reflect)
             polygons = []
-          if c == "torus":
+          elif c == "torus":
             const = command["constants"]
             add_torus(polygons,
                        float(args[0]), float(args[1]), float(args[2]),
@@ -196,16 +255,16 @@ def run(filename, delay=10):
             matrix_mult(stack[-1], polygons)
             draw_polygons(polygons, screen, zbuffer, view, ambient, light, symbols, reflect)
             polygons = []
-          if c == "pop":
+          elif c == "pop":
             stack.pop()
-          if c == "push":
+          elif c == "push":
             stack.append(dc(stack[-1]))
-          if c == "move":
+          elif c == "move":
             if knob != None: pass
             t = make_translate(float(args[0]), float(args[1]), float(args[2]))
             matrix_mult(stack[-1], t)
             stack[-1] = dc(t)
-          if c == "rotate":
+          elif c == "rotate":
             theta = float(args[1]) * (math.pi / 180)
             if args[0] == 'x':
                 t = make_rotX(theta)
@@ -215,18 +274,18 @@ def run(filename, delay=10):
                 t = make_rotZ(theta)
             matrix_mult(stack[-1], t)
             stack[-1] = dc(t)
-          if c == "scale":
+          elif c == "scale":
             t = make_scale(float(args[0]), float(args[1]), float(args[2]))
             matrix_mult(stack[-1], t)
             stack[-1] = dc(t)
           #it seems like the mdl.py file already does everything I need for constants
-          if c == "constants": pass
+          elif c == "constants": pass
           #to be coded later
-          if c == "save_knobs": pass
-          if c == "tween": pass
-          if c == "light": pass
-          if c == "mesh": pass
-          if c == "basename": pass
+          elif c == "save_knobs": pass
+          elif c == "tween": pass
+          elif c == "light": pass
+          elif c == "mesh": pass
+          elif c == "basename": pass
       fname = basename + str(x) + ".png"
       if num_frames > 1: fname = "anim/" + fname
       images.append(fname)

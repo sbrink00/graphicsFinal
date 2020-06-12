@@ -1,6 +1,6 @@
 import subprocess
 
-font = "pinyon/"
+font = "lobster/"
 
 def genLines(file):
   with open(font + file, "r") as f:
@@ -102,6 +102,8 @@ def genLetterLines(letter):
       if ml and whitepixel(lines[y][x]):
         output.append([s, x - 1, len(lines) - y - 1])
         ml = False
+  if font == "tnr/" and letter == "q":
+    for i in range(len(output)): output[i] = [int(x * .95) for x in output[i]]
   for i in range(len(output)):
     output[i] = " ".join([str(p) for p in output[i]]) + "\n"
   with open(font + letter + ".letter", "w") as f: f.writelines(output)
@@ -117,7 +119,6 @@ def genLetterEdges(letter, z):
     edges.append([line[1], line[2], z, 1])
   return edges
 
-
 def whiteline(line):
   for color in line:
     if not (color[0] == color[1] == color[2] == 255): return False
@@ -129,4 +130,4 @@ def whitepixel(pixel):
 def blackpixel(pixel):
   return not whitepixel(pixel)
 
-makeLetters("pinyon.ppm")
+makeLetters("lobster.ppm")
