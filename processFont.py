@@ -110,7 +110,6 @@ def genLetterLines(letter):
 
 def genLetterEdges(letter, z):
   edges = []
-  genLetterLines(letter)
   with open(font + letter + ".letter", "r") as f:
     lines = f.readlines()
   lines = [[int(x) for x in y.strip().split(" ")] for y in lines]
