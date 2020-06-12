@@ -24,9 +24,10 @@ Sam Brink
 
 ### Overview
 
-- 2d Letters with 5 fonts and a command to add more   
-- color gradient for background for animation  
-- extra commands to make easier to use  
+- 2d Letters with 5 fonts.   
+- color gradient for background for animation.
+- extra commands to make easier to use.
+- revised certain parts of engine to make faster.
 
 #### New Commands:
 (o) after arguments signals it's optional
