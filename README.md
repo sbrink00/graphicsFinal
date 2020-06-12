@@ -34,8 +34,7 @@ Sam Brink
 -word symbol symbol  
   This command creates a word variable (variable name is first argument)  
   and sets its value to the second argument. This can be used to write a
-  single letter, word, or sentence. The second argument must be all lower-  
-  case. Due to spaces being used to differentiate arguments, to signify a
+  single letter, word, or sentence. The second argument must be all lowercase. Due to spaces being used to differentiate arguments, to signify a
   space use capital S. Newline is capital N. The phrase "hello world\nyessir"
   would be written "helloSworldNyessir"
 
