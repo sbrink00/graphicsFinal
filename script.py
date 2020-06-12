@@ -1,15 +1,12 @@
 from __future__ import print_function
-from addImage import addTextImage
 import sys
 import mdl
 from display import *
-import display
 from matrix import *
 from draw import *
 import subprocess
 import time
 from pprint import pprint
-import math
 
 def dc(ary):
   return [x if type(x) is not list else dc(x) for x in ary]
