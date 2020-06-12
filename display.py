@@ -12,8 +12,6 @@ BLUE = 2
 white = [255, 255, 255]
 black = [0, 0, 0]
 
-DEFAULT_COLOR = black
-
 def new_screen(color, width = XRES, height = YRES):
     screen = []
     for y in range( height ):

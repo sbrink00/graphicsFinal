@@ -45,7 +45,8 @@ tokens = (
     "DELAY",
     "DCOLOR",
     "COLOR",
-    "DCOLOR_GRADIENT"
+    "DCOLOR_GRADIENT",
+    "STEP_THREE_D"
 )
 
 reserved = {
@@ -93,7 +94,8 @@ reserved = {
     "delay": "DELAY",
     "dcolor": "DCOLOR",
     "color": "COLOR",
-    "dcolor_gradient": "DCOLOR_GRADIENT"
+    "dcolor_gradient": "DCOLOR_GRADIENT",
+    "step_three_d": "STEP_THREE_D"
 }
 
 t_ignore = " \t"
@@ -160,16 +162,28 @@ def p_command_word(p):
     commands.append({'op': p[1], 'args': p[2:]})
 
 def p_command_write(p):
-    """command : WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER
-               | WRITE SYMBOL NUMBER NUMBER NUMBER NUMBER SYMBOL"""
+    """command : WRITE SYMBOL NUMBER NUMBER NUMBER
+               | WRITE SYMBOL NUMBER NUMBER NUMBER SYMBOL"""
     cmd = {'op': p[1], 'args': p[2:7]}
-    if len(p) == 8: cmd["font"] = p[7] + "/"
+    if len(p) == 7: cmd["font"] = p[6] + "/"
+    else: cmd["font"] = None
     commands.append(cmd)
 
 def p_command_writecentered(p):
-    """command : WRITECENTERED SYMBOL NUMBER"""
-    cmd = {'op': p[1], 'args': p[2:4]}
-    if len(p) == 5: cmd["font"] = p[4] + "/"
+    """command : WRITECENTERED SYMBOL
+               | WRITECENTERED SYMBOL SYMBOL
+               | WRITECENTERED SYMBOL NUMBER NUMBER
+               | WRITECENTERED SYMBOL SYMBOL NUMBER NUMBER
+               | WRITECENTERED SYMBOL SYMBOL NUMBER NUMBER SYMBOL"""
+    cmd = {'op': p[1], 'args': p[2:3], "font": None, "frames": None, "color": None}
+    arg_start = 3
+    if len(p) > 3:
+      if isinstance(p[3], str):
+        cmd["font"] = p[3] + "/"
+        arg_start = 4
+    if len(p) > 4:
+      cmd["frames"] = p[arg_start:arg_start + 2]
+    if len(p) == 7: cmd["color"] = p[6]
     commands.append(cmd)
 
 def p_command_delay(p):
@@ -186,6 +200,10 @@ def p_command_color(p):
 
 def p_command_dcolor_gradient(p):
     """command : DCOLOR_GRADIENT SYMBOL SYMBOL NUMBER NUMBER"""
+    commands.append({'op': p[1], 'args': p[2:]})
+
+def p_command_step_three_d(p):
+    """command : STEP_THREE_D NUMBER"""
     commands.append({'op': p[1], 'args': p[2:]})
 
 def p_command_stack(p):

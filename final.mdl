@@ -1,0 +1,28 @@
+frames 199
+basename final
+delay 5
+color black 0 0 0
+color white 255 255 255
+dcolor_gradient black white 0 99
+dcolor_gradient white black 100 198
+color niceblue 100 100 255
+color orange 252 88 6
+push
+word jokequestion whySdidStheSprogrammerNSSSSSquitShisSjob
+word jokeanswer heSdidntSgetSarrays
+move 250 250 0
+scale .5 .5 .5 k1
+rotate z 1080 k1
+writecentered jokequestion lobster 0 99 niceblue
+pop
+push
+move 250 600 0
+move 0 -350 0 k2
+scale .5 .5 .5
+rotate y 720 k2
+writecentered jokeanswer comicsans 100 198 orange
+vary k1 0 49 0 1
+vary k1 50 198 1 1
+vary k2 0 99 0 0
+vary k2 100 164 0 1
+vary k2 165 198 1 1

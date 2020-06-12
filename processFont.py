@@ -1,6 +1,6 @@
 import subprocess
 
-font = "lobster/"
+font = "comicsans/"
 
 def genLines(file):
   with open(font + file, "r") as f:
@@ -129,5 +129,3 @@ def whitepixel(pixel):
 
 def blackpixel(pixel):
   return not whitepixel(pixel)
-
-makeLetters("lobster.ppm")

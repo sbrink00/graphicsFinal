@@ -8,14 +8,14 @@ from math import log
 def makeLetter(x, y, z, letter, size):
   if letter == " " or letter == "\n": return []
   edges = genLetterEdges(letter, z)
-  if size == 6:
-    idx = 0
-    while idx < len(edges):
-      if edges[idx][1] % 2 == 1:
-        del edges[idx]
-        idx -= 1
-      idx += 1
-    matrix_mult(make_scale(.5, .5, .5), edges)
+  # if size == 6:
+  #   idx = 0
+  #   while idx < len(edges):
+  #     if edges[idx][1] % 2 == 1:
+  #       del edges[idx]
+  #       idx -= 1
+  #     idx += 1
+  #   matrix_mult(make_scale(.5, .5, .5), edges)
   matrix_mult(make_translate(x, y, z), edges)
   return edges
 

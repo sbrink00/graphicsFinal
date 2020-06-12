@@ -100,7 +100,7 @@ def second_pass( commands, num_frames, symbols ):
       temp = None
       for i in commands:
         if i["op"] == "dcolor": temp = symbols[i["args"][0]]
-      temp = [0, 0, 0] if temp != None else temp
+      temp = [0, 0, 0] if temp == None else temp
       for i in range(len(frames)): frames[i]["dcolor"] = temp
     for frame in frames:
       if "dcolor" not in frame:
@@ -112,13 +112,15 @@ def removeAnim(commands):
   while idx < len(commands):
     c = commands[idx]["op"]
     args = commands[idx]["args"]
-    if c in ["basename", "frames", "vary", "delay"]:
+    if c in ["basename", "frames", "vary"]:
       del commands[idx]
       idx -= 1
     idx += 1
 
 def oneTimeCommands(commands, symbols, dcolor):
   idx = 0
+  delay = 3
+  step_3d = 10
   while idx < len(commands):
     c = commands[idx]["op"]
     args = commands[idx]["args"]
@@ -130,7 +132,16 @@ def oneTimeCommands(commands, symbols, dcolor):
     elif c in ["color", "constants"]:
       del commands[idx]
       idx -= 1
+    elif c == "delay":
+      delay = int(args[0])
+      del commands[idx]
+      idx -= 1
+    elif c == "step_three_d":
+      step_3d = int(args[0])
+      del commands[idx]
+      idx -= 1
     idx += 1
+    return delay,step_3d
 
 
 def run(filename):
@@ -146,8 +157,8 @@ def run(filename):
     basename, num_frames, animCommands = first_pass(commands)
     if animCommands: knobValues = second_pass(animCommands, num_frames, symbols)
     dcolor = [0, 0, 0]
-    DEFAULT_FONT = "lobster/"
-    oneTimeCommands(commands, symbols, dcolor)
+    DEFAULT_FONT = "tnr/"
+    delay,step_3d = oneTimeCommands(commands, symbols, dcolor)
     removeAnim(commands)
     view = [0,
             0,
@@ -167,11 +178,8 @@ def run(filename):
     #for when there are multiple coordinate systems
     stacks = []
     stacks.append(stack)
-    screen = new_screen(dcolor)
     zbuffer = new_zbuffer()
     #tmp = []
-    step_3d = 10
-    delay = 3
     consts = ''
     edges = []
     polygons = []
@@ -180,14 +188,17 @@ def run(filename):
                          {'red': [0.2, 0.5, 0.5],
                           'green': [0.2, 0.5, 0.5],
                           'blue': [0.2, 0.5, 0.5]}]
+    symbols["draw_default"] = [0, 0, 0]
     knobCommands = ["move", "rotate", "scale"]
     threeDStuffs = ["box", "sphere", "torus"]
     images = []
     start = time.time()
     for x in range(num_frames):
+      print(step_3d)
       print("Now making frame " + str(x), end='\r')
       sys.stdout.flush()
-      screen = new_screen(knobValues[x]["dcolor"])
+      if num_frames  > 1: screen = new_screen(knobValues[x]["dcolor"])
+      else: screen = new_screen([0, 0, 0])
       zbuffer = new_zbuffer()
       stack = [dc(tmp)]
       for i,command in enumerate(commands):
@@ -206,17 +217,26 @@ def run(filename):
           if c == "word":
             words[args[0]] = args[1].replace("S", " ").replace( "N", "\n")
           elif c == "write":
-            w,xcor,ycor,zcor,size = words[args[0]],int(args[1]),int(args[2]),int(args[3]),int(args[4])
-            createWord(xcor, ycor, zcor, w, edges, DEFAULT_FONT, size)
+            w,xcor,ycor,zcor,size = words[args[0]],int(args[1]),int(args[2]),int(args[3]),12
+            if command["font"]: f = command["font"]
+            else: f = "tnr/"
+            createWord(xcor, ycor, zcor, w, edges, f, size)
             matrix_mult(stack[-1], edges)
             draw_lines(edges, screen, zbuffer, [100, 100, 255])
             edges.clear()
           elif c == "writecentered":
-            w,size = words[args[0]],int(args[1])
-            createWordCentered(w, edges, DEFAULT_FONT, size)
-            matrix_mult(stack[-1], edges)
-            draw_lines(edges, screen, zbuffer, [100, 100, 255])
-            edges.clear()
+            w,size = words[args[0]],12
+            if command["font"]: f = command["font"]
+            else: f = "tnr/"
+            if command["frames"]: s,e = int(command["frames"][0]),int(command["frames"][1])
+            else: s,e = 0,num_frames
+            if command["color"]: color = command["color"]
+            else: color = "draw_default"
+            if s <= x and x <= e:
+              createWordCentered(w, edges, f, size)
+              matrix_mult(stack[-1], edges)
+              draw_lines(edges, screen, zbuffer, symbols[color])
+              edges.clear()
           elif c == "save":
             save_extension(screen, args[0] + ".png")
             print("Filename: " + args[0] + ".png")
