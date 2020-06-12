@@ -6,7 +6,6 @@ from matrix import *
 from draw import *
 import subprocess
 import time
-from pprint import pprint
 
 def dc(ary):
   return [x if type(x) is not list else dc(x) for x in ary]
@@ -96,6 +95,7 @@ def second_pass( commands, num_frames, symbols ):
     if not dcolors:
       temp = None
       for i in commands:
+        #print(symbols[i["args"][0]])
         if i["op"] == "dcolor": temp = symbols[i["args"][0]]
       temp = [0, 0, 0] if temp == None else temp
       for i in range(len(frames)): frames[i]["dcolor"] = temp
@@ -152,8 +152,8 @@ def run(filename):
     else:
         raise Exception("Unable to parse file.")
     basename, num_frames, animCommands = first_pass(commands)
-    if animCommands: knobValues = second_pass(animCommands, num_frames, symbols)
     dcolor = [0, 0, 0]
+    if animCommands: knobValues = second_pass(commands, num_frames, symbols)
     DEFAULT_FONT = "tnr/"
     delay,step_3d = oneTimeCommands(commands, symbols, dcolor)
     removeAnim(commands)
@@ -191,10 +191,9 @@ def run(filename):
     images = []
     start = time.time()
     for x in range(num_frames):
-      print(step_3d)
       print("Now making frame " + str(x), end='\r')
       sys.stdout.flush()
-      if num_frames  > 1: screen = new_screen(knobValues[x]["dcolor"])
+      if num_frames > 1: screen = new_screen(knobValues[x]["dcolor"])
       else: screen = new_screen([0, 0, 0])
       zbuffer = new_zbuffer()
       stack = [dc(tmp)]
